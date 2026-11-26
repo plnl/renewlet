@@ -212,7 +212,7 @@ function SubscriptionCardComponent({
   const dailyCost = projectSubscriptionDailyCost(subscription.price, subscription, today);
   const hasCalendarEvent = !isBuyout;
   const canManualRenew = Boolean(onRenew) && isManualRenewEligible(subscription);
-  const providerConsole = findProviderConsole(subscription.name, subscription.website ?? "");
+  const providerConsole = findProviderConsole(subscription.name, "");
   const billingCycleLabel = formatBillingCycleLabel(subscription, locale);
   const priceReference = getSubscriptionPriceReference({
     price: subscription.price,

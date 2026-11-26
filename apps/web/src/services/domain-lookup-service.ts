@@ -21,11 +21,10 @@ export interface DomainLookupResult {
 
 export const domainLookupService = {
   async lookup(domain: string): Promise<DomainLookupResult> {
-    const response = await apiFetch("/api/app/subscriptions/domain-lookup", domainLookupResponseSchema, {
+    return await apiFetch("/api/app/subscriptions/domain-lookup", domainLookupResponseSchema, {
       method: "POST",
       body: JSON.stringify({ domain }),
       timeoutMs: 20_000,
     });
-    return response.data;
   },
 };

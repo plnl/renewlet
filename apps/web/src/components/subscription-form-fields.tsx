@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { compareDateOnly } from "@/lib/time/date-only";
+import { assertDateOnly, compareDateOnly } from "@/lib/time/date-only";
 import { LogoPicker } from "@/components/logo-picker";
 import { SubscriptionBalanceFields } from "@/components/subscription-balance-fields";
 import { CostSharingFields } from "@/components/subscription-cost-sharing-fields";
@@ -82,7 +82,7 @@ function extractDomainCandidate(name: string, website: string): string {
       return cleaned;
     }
     const candidate = cleaned.match(/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/);
-    if (candidate) return candidate[0];
+    if (candidate) return candidate?.[0] ?? "";
   }
   return "";
 }
@@ -192,7 +192,7 @@ export const SubscriptionFormFields = memo(function SubscriptionFormFields({
     setDomainLookupMessage("");
     try {
       const result = await domainLookupService.lookup(candidate);
-      update("nextBillingDate", result.expiryDate);
+      update("nextBillingDate", assertDateOnly(result.expiryDate));
       setDomainLookupMessage(
         `已从 RDAP 获取到期日${result.registrar ? `（注册商：${result.registrar}）` : ""}`,
       );
