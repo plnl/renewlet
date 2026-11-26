@@ -73,11 +73,11 @@ function extractDomainCandidate(name: string, website: string): string {
   for (const raw of [name, website]) {
     const value = raw.trim().toLowerCase();
     if (!value) continue;
-    const cleaned = value
+    const firstPart = value
       .replace(/^https?:\/\//, "")
       .replace(/^www\./, "")
-      .split(/[/?#]/)[0]
-      .replace(/\s.*$/, "");
+      .split(/[/?#]/)[0] ?? "";
+    const cleaned = firstPart.replace(/\s.*$/, "");
     if (/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(cleaned)) {
       return cleaned;
     }

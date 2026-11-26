@@ -15,7 +15,7 @@ const domainLookupResponseSchema = apiSuccessResponseSchema(domainLookupPayloadS
 export interface DomainLookupResult {
   domain: string;
   expiryDate: string;
-  registrar?: string;
+  registrar?: string | undefined;
   source: string;
 }
 
