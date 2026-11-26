@@ -28,6 +28,7 @@ import { MobileBottomDrawerContent, MobileDrawerRoot } from "@/components/ui/mob
 import { useCustomConfigState } from "@/contexts/CustomConfigContext";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useSettings } from "@/hooks/use-settings";
+import { findProviderConsole } from "@/lib/provider-console";
 import { useI18n } from "@/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 import { formatCurrency as formatPreciseCurrency, formatCompactCurrencyAmount } from "@/lib/currency";
@@ -317,6 +318,19 @@ function SubscriptionDetailContent({
                 className="inline-flex max-w-full items-center justify-end gap-1 text-primary hover:underline"
               >
                 <span className="truncate">{subscription.website}</span>
+                <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </a>
+            </DetailRow>
+          ) : null}
+          {findProviderConsole(subscription.name, subscription.website ?? "") ? (
+            <DetailRow label="服务商后台">
+              <a
+                href={findProviderConsole(subscription.name, subscription.website ?? "")?.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex max-w-full items-center justify-end gap-1 text-primary hover:underline"
+              >
+                <span className="truncate">打开{findProviderConsole(subscription.name, subscription.website ?? "")?.name}控制台</span>
                 <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               </a>
             </DetailRow>

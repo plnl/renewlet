@@ -22,7 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { categoryBadgeStyle } from '@/lib/color';
-import { Wallet, Calendar, MoreHorizontal, CalendarClock, Bell, CreditCard, CalendarPlus, Copy, Eye, EyeOff, Gauge, Pause, Play, Pencil, Pin, PinOff, RotateCw, Trash2 } from 'lucide-react';
+import { Wallet, Calendar, MoreHorizontal, CalendarClock, Bell, CreditCard, CalendarPlus, Copy, ExternalLink, Eye, EyeOff, Gauge, Pause, Play, Pencil, Pin, PinOff, RotateCw, Trash2 } from 'lucide-react';
 import {
   daysBetweenDateOnly,
   type DateOnly,
@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { preloadRenewSubscriptionDialog } from '@/components/renew-subscription-dialog-loader';
+import { findProviderConsole } from '@/lib/provider-console';
 import { AuthorizedImage } from '@/components/authorized-image';
 import { TruncatedTooltipText } from '@/components/ui/truncated-tooltip-text';
 import {
@@ -211,6 +212,7 @@ function SubscriptionCardComponent({
   const dailyCost = projectSubscriptionDailyCost(subscription.price, subscription, today);
   const hasCalendarEvent = !isBuyout;
   const canManualRenew = Boolean(onRenew) && isManualRenewEligible(subscription);
+  const providerConsole = findProviderConsole(subscription.name, subscription.website ?? "");
   const billingCycleLabel = formatBillingCycleLabel(subscription, locale);
   const priceReference = getSubscriptionPriceReference({
     price: subscription.price,
@@ -474,6 +476,15 @@ function SubscriptionCardComponent({
                   <DropdownMenuItem className={CARD_ACTION_MENU_ITEM_CLASSNAME} onClick={() => onClone(subscription.id)}>
                     <Copy className="h-4 w-4 shrink-0 text-muted-foreground" />
                     {t("subscription.copy")}
+                  </DropdownMenuItem>
+                ) : null}
+                {providerConsole ? (
+                  <DropdownMenuItem
+                    className={CARD_ACTION_MENU_ITEM_CLASSNAME}
+                    onClick={() => window.open(providerConsole.url, "_blank", "noopener,noreferrer")}
+                  >
+                    <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    {`打开${providerConsole.name}控制台`}
                   </DropdownMenuItem>
                 ) : null}
                 {hasCalendarEvent && onAddToCalendar ? (

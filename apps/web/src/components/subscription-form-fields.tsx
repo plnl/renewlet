@@ -1,6 +1,7 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { DateOnlyPickerField } from "@/components/date-only-picker-field";
 import { FormField, FormFieldRow } from "@/components/ui/form-field";
+import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +40,7 @@ import { customCycleUnitLabelKey } from "@/lib/subscription-billing";
 import { useI18n } from "@/i18n/I18nProvider";
 import { localizedLabel } from "@/i18n/locales";
 import { getErrorFieldsToClearForFormChange, type SubscriptionFormErrors, type SubscriptionFormFieldsProps } from "@/components/subscription-form-fields-model";
+import { domainLookupService } from "@/services/domain-lookup-service";
 
 export type { SubscriptionFormReminderType };
 export type { SubscriptionFormState };
@@ -65,6 +67,24 @@ function disableCollectionReminder(costSharing: CostSharing | undefined): CostSh
     ...costSharing,
     collectionReminder: { ...costSharing.collectionReminder, enabled: false },
   };
+}
+
+function extractDomainCandidate(name: string, website: string): string {
+  for (const raw of [name, website]) {
+    const value = raw.trim().toLowerCase();
+    if (!value) continue;
+    const cleaned = value
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split(/[/?#]/)[0]
+      .replace(/\s.*$/, "");
+    if (/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(cleaned)) {
+      return cleaned;
+    }
+    const candidate = cleaned.match(/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+/);
+    if (candidate) return candidate[0];
+  }
+  return "";
 }
 
 export const SubscriptionFormFields = memo(function SubscriptionFormFields({
@@ -159,6 +179,30 @@ export const SubscriptionFormFields = memo(function SubscriptionFormFields({
     onFieldChange?.(key, value);
   }, [onClearFieldError, onFieldChange, setFormData]);
 
+  const [domainLookupLoading, setDomainLookupLoading] = useState(false);
+  const [domainLookupMessage, setDomainLookupMessage] = useState("");
+
+  const handleLookupDomain = useCallback(async () => {
+    const candidate = extractDomainCandidate(formData.name, formData.website);
+    if (!candidate) {
+      setDomainLookupMessage("请先在名称或网站中填写域名");
+      return;
+    }
+    setDomainLookupLoading(true);
+    setDomainLookupMessage("");
+    try {
+      const result = await domainLookupService.lookup(candidate);
+      update("nextBillingDate", result.expiryDate);
+      setDomainLookupMessage(
+        `已从 RDAP 获取到期日${result.registrar ? `（注册商：${result.registrar}）` : ""}`,
+      );
+    } catch (error) {
+      setDomainLookupMessage(error instanceof Error ? error.message : "域名查询失败");
+    } finally {
+      setDomainLookupLoading(false);
+    }
+  }, [formData.name, formData.website, update]);
+
   const id = (name: string) => `${idPrefix}${name}`;
   const categoryId = id("category");
 
@@ -183,16 +227,33 @@ export const SubscriptionFormFields = memo(function SubscriptionFormFields({
     <>
       <FormField id={id("name")} label={t("subscription.field.name")} error={errors.name} errorId={id("name-error")}>
         {(field) => (
-          <Input
-            id={field.id} name={field.id} enterKeyHint="next"
-            placeholder={t("subscription.placeholder.name")}
-            value={formData.name}
-            onChange={(e) => update("name", e.target.value)}
-            required
-            aria-invalid={field.invalid}
-            aria-describedby={field.describedBy}
-            className="border-border bg-secondary"
-          />
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Input
+                id={field.id} name={field.id} enterKeyHint="next"
+                placeholder={t("subscription.placeholder.name")}
+                value={formData.name}
+                onChange={(e) => update("name", e.target.value)}
+                required
+                aria-invalid={field.invalid}
+                aria-describedby={field.describedBy}
+                className="border-border bg-secondary flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                disabled={domainLookupLoading || (!formData.name && !formData.website)}
+                onClick={() => void handleLookupDomain()}
+              >
+                {domainLookupLoading ? "查询中…" : "查到期日"}
+              </Button>
+            </div>
+            {domainLookupMessage ? (
+              <p className="text-xs text-muted-foreground" role="status">{domainLookupMessage}</p>
+            ) : null}
+          </div>
         )}
       </FormField>
 
